@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="XAUUSD 趋势回踩突破 V1.21：面向 MT4 的黄金 M5 趋势策略说明、两年回测、滚动起点压力测试、资金要求与风险披露。">
+  <meta name="theme-color" content="#f3f1ea">
+  <link rel="canonical" href="https://chatfxeatm.github.io/xauusd-trend-pullback-v121/">
+  <title>XAUUSD 趋势回踩突破 V1.21｜策略说明与风险披露</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳至正文</a>
+
+  <header class="site-header" id="top">
+    <a class="brand" href="#top" aria-label="返回顶部">
+      <span class="brand-mark" aria-hidden="true">XAU</span>
+      <span>趋势回踩突破 <b>V1.21</b></span>
+    </a>
+    <button class="menu-button" type="button" aria-expanded="false" aria-controls="site-nav" title="打开导航">
+      <span></span><span></span><span></span>
+    </button>
+    <nav id="site-nav" aria-label="页面导航">
+      <a href="#logic">策略逻辑</a>
+      <a href="#evidence">回测证据</a>
+      <a href="#risk">风险控制</a>
+      <a href="#deployment">部署要求</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero band">
+      <div class="hero-copy">
+        <p class="eyebrow">MT4 · XAUUSD · M5 · 单向单仓</p>
+        <h1>XAUUSD<br>趋势回踩突破</h1>
+        <p class="lead">H1 判断方向，M15 等待结构回踩，M5 用已收盘 K 线执行。它不是网格、马丁或多空对锁；盈利依赖控制亏损，并让顺势尾仓继续运行。</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#evidence">查看验证数据</a>
+          <a class="button secondary" href="#risk">先读风险</a>
+        </div>
+      </div>
+
+      <div class="hero-proof" aria-label="两年回测核心指标">
+        <div class="proof-row">
+          <span>测试区间</span>
+          <strong>2024.09.26–2026.09.26</strong>
+        </div>
+        <div class="proof-grid">
+          <div><span>复合年化</span><strong>151.27%</strong></div>
+          <div><span>最终资金</span><strong>$18,941.25</strong></div>
+          <div><span>利润因子</span><strong>1.20</strong></div>
+          <div><span>相对回撤</span><strong>30.19%</strong></div>
+        </div>
+        <p class="proof-note">起始资金 $3,000 · 固定 0.10 手 · 点差 35 · Every Tick · 历史结果不构成收益承诺</p>
+      </div>
+
+      <figure class="hero-chart">
+        <img src="assets/equity-2y.gif" alt="XAUUSD 趋势回踩突破 V1.21 两年 MT4 回测资金曲线">
+        <figcaption>原始 MT4 策略测试器资金曲线，非重新绘制的宣传图。</figcaption>
+      </figure>
+    </section>
+
+    <section class="notice-strip" aria-label="重要提醒">
+      <strong>先看底线：</strong>
+      <span>推荐最低资金 $3,000 对应 0.10 手；低于该资金不得直接套用本页参数。任何历史年化都不能替代模拟验证。</span>
+    </section>
+
+    <section class="band section" id="logic">
+      <div class="section-heading">
+        <p class="section-index">01 / STRATEGY</p>
+        <h2>交易逻辑</h2>
+        <p>只在多周期方向、结构和执行条件一致时入场。每一层负责一个问题，避免把单一指标当成完整信号。</p>
+      </div>
+
+      <div class="process" role="list">
+        <article role="listitem">
+          <span class="step">01</span>
+          <h3>H1 定方向</h3>
+          <p>EMA20/EMA60、ADX 与 ATR 共同确认趋势方向和可交易波动区间。没有明确方向时不下单。</p>
+        </article>
+        <article role="listitem">
+          <span class="step">02</span>
+          <h3>M15 等回踩</h3>
+          <p>价格回到 EMA20 附近形成结构，而不是在趋势末端追价。ATR 限制过度延伸。</p>
+        </article>
+        <article role="listitem">
+          <span class="step">03</span>
+          <h3>M5 收盘执行</h3>
+          <p>突破或回踩反弹必须由已收盘 K 线确认，避免使用未完成 K 线造成回看偏差。</p>
+        </article>
+        <article role="listitem">
+          <span class="step">04</span>
+          <h3>分段退出</h3>
+          <p>1R 移保本，1.5R 平掉 50%，剩余仓由 M5 EMA25 反向保护与 M15 分型跟踪管理。</p>
+        </article>
+      </div>
+
+      <div class="logic-ledger">
+        <div>
+          <span class="ledger-label">持仓结构</span>
+          <strong>同一时刻只持有一个方向</strong>
+          <p>已有主仓或尾仓时不重复开启新的主单，不依赖多空互锁制造账面稳定。</p>
+        </div>
+        <div>
+          <span class="ledger-label">版本修复</span>
+          <strong>部分平仓后的尾仓不再失管</strong>
+          <p>即使券商把注释改成 <code>from #票号</code>，仍按 Symbol 与 Magic 继续执行退出逻辑。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="band section evidence-band" id="evidence">
+      <div class="section-heading split-heading">
+        <div>
+          <p class="section-index">02 / EVIDENCE</p>
+          <h2>回测证据</h2>
+        </div>
+        <p>所有核心数字来自最终交付 SET。页面同时呈现主样本、年度样本与不利起点，不只展示最好的一条曲线。</p>
+      </div>
+
+      <div class="metrics" aria-label="两年回测统计">
+        <article><span>总净利润</span><strong>$15,941.25</strong><small>起始 $3,000</small></article>
+        <article><span>总回报</span><strong>531.38%</strong><small>两年累计</small></article>
+        <article><span>复合年化</span><strong>151.27%</strong><small>按两年复合计算</small></article>
+        <article><span>相对回撤</span><strong>30.19%</strong><small>$1,302.44</small></article>
+        <article><span>利润因子</span><strong>1.20</strong><small>并非高容错系统</small></article>
+        <article><span>测试器记录</span><strong>2,465</strong><small>含修改与分批平仓记录</small></article>
+      </div>
+
+      <div class="chart-panel">
+        <div class="chart-toolbar" role="tablist" aria-label="资金曲线区间">
+          <div>
+            <p class="chart-title">MT4 原始资金曲线</p>
+            <p class="chart-subtitle" id="chart-subtitle">两年主样本 · 点差 35</p>
+          </div>
+          <div class="segmented-control">
+            <button type="button" role="tab" aria-selected="true" data-chart="2y">两年</button>
+            <button type="button" role="tab" aria-selected="false" data-chart="2026">2026</button>
+          </div>
+        </div>
+        <figure>
+          <img id="equity-chart" src="assets/equity-2y.gif" alt="两年 MT4 策略测试器资金曲线">
+          <figcaption id="chart-caption">建模质量 89.95%，图表错误 26；测试点差固定为 35。</figcaption>
+        </figure>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <caption>滚动起点与压力窗口</caption>
+          <thead>
+            <tr><th scope="col">起始日期 / 条件</th><th scope="col">净利润</th><th scope="col">最终资金</th><th scope="col">PF</th><th scope="col">相对回撤</th><th scope="col">结论</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>2024-09-26，点差 35</td><td class="positive">+$15,941.25</td><td>$18,941.25</td><td>1.20</td><td>30.19%</td><td><span class="status pass">主样本</span></td></tr>
+            <tr><td>2026-01-01，点差 35</td><td class="positive">+$8,533.31</td><td>$11,533.31</td><td>1.24</td><td>24.09%</td><td><span class="status pass">盈利</span></td></tr>
+            <tr><td>2025-03-30，点差 35</td><td class="positive">+$12,659.70</td><td>$15,659.70</td><td>1.18</td><td>28.43%</td><td><span class="status pass">盈利</span></td></tr>
+            <tr><td>2025-09-26，点差 35</td><td class="positive">+$940.08</td><td>$3,940.08</td><td>1.10</td><td>35.62%</td><td><span class="status caution">偏弱</span></td></tr>
+            <tr><td>2026-03-30，点差 35</td><td class="negative">−$604.85</td><td>$2,395.15</td><td>0.53</td><td>38.78%</td><td><span class="status stop">保护触发</span></td></tr>
+            <tr><td>2026-04-13，点差 35</td><td class="negative">−$1,036.84</td><td>$1,963.16</td><td>0.40</td><td>36.67%</td><td><span class="status stop">保护触发</span></td></tr>
+            <tr><td>两年，点差 60</td><td>$0.00</td><td>$3,000.00</td><td>—</td><td>0.00%</td><td><span class="status neutral">0 笔交易</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="band section" id="risk">
+      <div class="section-heading">
+        <p class="section-index">03 / RISK</p>
+        <h2>先保证账户还在</h2>
+        <p>V1.21 的改进重点不是让每段行情都盈利，而是在连续不利行情中停止扩大损失。</p>
+      </div>
+
+      <div class="risk-grid">
+        <article>
+          <span class="risk-number">45</span>
+          <h3>点差上限</h3>
+          <p>SET 将最大允许点差设为 45。固定点差 60 的两年压力测试为 0 笔交易，而不是带成本硬做。</p>
+        </article>
+        <article>
+          <span class="risk-number">65%</span>
+          <h3>权益保护线</h3>
+          <p>基准取 $3,000 与历史最高权益的较大值。权益跌到基准的 65% 后停止新开仓，只管理已有仓位。</p>
+        </article>
+        <article>
+          <span class="risk-number">0.10</span>
+          <h3>手数只缩不放</h3>
+          <p>权益低于 $3,000 时固定手数按比例缩小；账户盈利后仍不超过 0.10 手，不自动复利放大风险。</p>
+        </article>
+      </div>
+
+      <div class="risk-statement">
+        <div class="risk-statement-title">
+          <span>RISK DISCLOSURE</span>
+          <h3>你可能损失真实资金</h3>
+        </div>
+        <div class="risk-copy">
+          <p>黄金在数据公布、跳空、流动性下降和服务器延迟期间可能出现滑点、拒单、扩大点差或止损成交偏差。回测无法完整模拟这些执行风险。</p>
+          <p>两年主样本的利润因子仅为 1.20，意味着交易成本和报价差异足以明显侵蚀优势。滚动测试已经出现亏损窗口，任何启动日期都没有盈利保证。</p>
+          <p>高水位保护是停止新仓机制，不是精确的账户止损。已有持仓仍可能让实际回撤短暂越过设定线。不得使用借款、生活费或无法承受损失的资金。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="band section deployment-band" id="deployment">
+      <div class="section-heading split-heading">
+        <div>
+          <p class="section-index">04 / DEPLOYMENT</p>
+          <h2>部署要求</h2>
+        </div>
+        <p>该版本用于模拟验证和后续小资金实测。未完成券商环境核对前，不应直接扩大资金。</p>
+      </div>
+
+      <div class="deployment-layout">
+        <dl class="spec-list">
+          <div><dt>交易平台</dt><dd>MetaTrader 4</dd></div>
+          <div><dt>交易品种</dt><dd>XAUUSD</dd></div>
+          <div><dt>图表周期</dt><dd>M5</dd></div>
+          <div><dt>建议最低资金</dt><dd><strong>3,000 USD</strong></dd></div>
+          <div><dt>验证手数</dt><dd>固定 0.10 手</dd></div>
+          <div><dt>最大允许点差</dt><dd>45 点</dd></div>
+          <div><dt>时间过滤</dt><dd>关闭</dd></div>
+          <div><dt>建议模拟期</dt><dd>至少 2–4 周</dd></div>
+        </dl>
+
+        <div class="checklist">
+          <h3>上线前必须核对</h3>
+          <ul>
+            <li>经纪商 XAUUSD 的位数、合约大小、最小手数和止损距离。</li>
+            <li>实际平均点差是否接近回测 35；达到 45 时是否停止新开仓。</li>
+            <li>部分平仓后剩余票号是否继续执行 EMA25 与 M15 分型保护。</li>
+            <li>周五停止开仓与强平时间是否符合服务器时区。</li>
+            <li>模拟交割单与回测的进场时间、方向和手数是否具有可解释的一致性。</li>
+            <li>VPS 断线、MT4 重启后，高水位全局变量是否仍然保留。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="minimum-warning">
+        <span>最低资金提醒</span>
+        <p>本页验证的是 <strong>$3,000 / 0.10 手</strong>。$500 / 0.02 手并非完全等比例风险，且不属于本页最终验证口径。低于 $3,000 必须重新设置参考净值并独立回测，不得直接复制参数。</p>
+      </div>
+    </section>
+
+    <section class="band section methodology">
+      <div class="section-heading">
+        <p class="section-index">05 / METHODOLOGY</p>
+        <h2>数据边界</h2>
+      </div>
+      <div class="method-grid">
+        <div><span>建模方式</span><strong>MT4 Every Tick</strong></div>
+        <div><span>建模质量</span><strong>89.95%</strong></div>
+        <div><span>图表错误</span><strong>26</strong></div>
+        <div><span>回测点差</span><strong>35 / 60</strong></div>
+      </div>
+      <p class="method-note">未纳入真实佣金、动态滑点、网络延迟、拒单、掉线、VPS 故障、流动性缺口和 Tickmill 实际逐笔报价。模拟盘表现也不能直接证明真实账户成交质量。</p>
+    </section>
+  </main>
+
+  <footer>
+    <div>
+      <strong>XAUUSD 趋势回踩突破 V1.21</strong>
+      <p>策略介绍、回测证据与风险披露</p>
+    </div>
+    <div class="footer-meta">
+      <span>版本：1.21</span>
+      <span>最后验证：2026-09-28</span>
+      <span>源码 SHA256：3E2DBF7C…2543D55</span>
+    </div>
+    <p class="legal">本页面仅用于软件功能与历史测试说明，不构成投资建议、收益承诺、代客理财或资金募集。交易者应独立判断并承担全部损失风险。</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
